@@ -1,0 +1,1430 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <!-- InstanWeb AI Iframe Router Guard -->
+    <script id="instanweb-iframe-guard">
+    (function() {
+        if (window !== window.parent) {
+            // Overoverwrite window.location.replace to intercept absolute redirect recursions
+            const originalReplace = window.location.replace;
+            window.location.replace = function(url) {
+                console.log("[InstanWeb Guard] Filtered iframe redirect:", url);
+                const hashIndex = url.indexOf('#');
+                if (hashIndex !== -1) {
+                    window.location.hash = url.substring(hashIndex);
+                    return;
+                }
+                const originPrefix = window.location.origin + '/';
+                const cleanUrl = url.split('?')[0];
+                if (url === '/' || url === '' || cleanUrl === originPrefix || cleanUrl === window.location.origin) {
+                    return; // Prevent loading parent React app recursively
+                }
+                try { originalReplace.call(window.location, url); } catch(e) { window.location.hash = url; }
+            };
+            window.location.assign = window.location.replace;
+        }
+    })();
+    </script>
+      
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>annivrahmanindira - Our Love Journey</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: #0f172a;
+            color: #f8fafc;
+            overflow-x: hidden;
+        }
+        .font-serif {
+            font-family: 'Playfair Display', serif;
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #f43f5e;
+            border-radius: 3px;
+        }
+        /* Flip Timer Animation Styles */
+        .flip-card {
+            position: relative;
+            display: inline-flex;
+            flex-direction: column;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+            border-radius: 8px;
+        }
+        .flip-card-top, .flip-card-bottom {
+            height: 40px;
+            width: 70px;
+            overflow: hidden;
+            text-align: center;
+            font-size: 2rem;
+            font-weight: 700;
+            line-height: 80px;
+            background: #1e293b;
+            color: #f43f5e;
+            border: 1px solid #334155;
+        }
+        .flip-card-top {
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+            border-bottom: 0.5px solid #0f172a;
+        }
+        .flip-card-bottom {
+            border-bottom-left-radius: 8px;
+            border-bottom-right-radius: 8px;
+            line-height: 0px;
+            border-top: 0.5px solid #0f172a;
+            background: #1e293b;
+        }
+        /* Smooth card scale animation on change */
+        .digit-changed {
+            animation: flipScale 0.4s ease-in-out;
+        }
+        @keyframes flipScale {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.08); background: #334155; }
+            100% { transform: scale(1); }
+        }
+        /* Active Navigation Highlight */
+        .nav-active {
+            color: #f43f5e !important;
+            border-bottom: 2px solid #f43f5e;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between">
+
+    <!-- LOGIN PAGE / OVERLAY -->
+    <div id="login-container" class="fixed inset-0 z-50 bg-slate-950 flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-md w-full shadow-2xl relative overflow-hidden">
+            <div class="absolute -right-12 -top-12 w-32 h-32 bg-rose-500/10 rounded-full blur-2xl"></div>
+            <div class="absolute -left-12 -bottom-12 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl"></div>
+            
+            <div class="text-center mb-8">
+                <span class="text-4xl">💖</span>
+                <h1 class="text-2xl font-bold mt-3 font-serif bg-gradient-to-r from-rose-400 to-indigo-400 bg-clip-text text-transparent">annivrahmanindira</h1>
+                <p class="text-slate-400 text-xs mt-1">Silakan verifikasi diri Anda untuk masuk ke dalam portal kenangan kita.</p>
+            </div>
+
+            <!-- Quiz Step -->
+            <div id="quiz-step" class="space-y-4">
+                <div class="bg-slate-800/50 border border-slate-700 p-4 rounded-xl text-sm">
+                    <p class="text-slate-300 font-medium mb-2"><i class="fa-solid fa-circle-question text-rose-400 mr-2"></i>Kuis Kecil:</p>
+                    <p class="text-slate-400">Kapan hari anniversary kita berdua? (Hanya angka tanggalnya saja)</p>
+                </div>
+                <input type="number" id="quiz-answer" placeholder="Contoh: 9" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-rose-500 transition-colors text-center font-bold text-lg">
+                <button onclick="verifyQuiz()" class="w-full bg-gradient-to-r from-rose-500 to-indigo-600 hover:from-rose-600 hover:to-indigo-700 text-white font-semibold py-3 rounded-xl transition-all active:scale-95 shadow-lg shadow-rose-500/20">
+                    Lanjut <i class="fa-solid fa-arrow-right ml-1"></i>
+                </button>
+            </div>
+
+            <!-- Name Step (Hidden initially) -->
+            <div id="name-step" class="space-y-4 hidden">
+                <div class="bg-slate-800/50 border border-slate-700 p-4 rounded-xl text-sm mb-4">
+                    <p class="text-slate-300 font-medium mb-1"><i class="fa-solid fa-user-lock text-indigo-400 mr-2"></i>Siapa Nama Lengkap Anda?</p>
+                    <p class="text-slate-400 text-xs">Masukkan nama lengkap Anda untuk mendeteksi hak akses.</p>
+                </div>
+                <input type="text" id="user-fullname" placeholder="Masukkan nama lengkap..." class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-rose-500 transition-colors text-center font-semibold">
+                
+                <div class="flex gap-2">
+                    <button onclick="backToQuiz()" class="w-1/3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold py-3 rounded-xl transition-all">
+                        Kembali
+                    </button>
+                    <button id="btn-login" class="w-2/3 bg-gradient-to-r from-rose-500 to-indigo-600 hover:from-rose-600 hover:to-indigo-700 text-white font-semibold py-3 rounded-xl transition-all active:scale-95 shadow-lg shadow-rose-500/20">
+                        Masuk Sistem
+                    </button>
+                </div>
+                <div id="login-error" class="text-rose-400 text-xs text-center mt-2 hidden"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN APP CONTENT (Hidden until login) -->
+    <div id="app-container" class="hidden flex-1 flex flex-col">
+        
+        <!-- TOP NAVIGATION -->
+        <nav class="bg-slate-900/90 backdrop-blur-md sticky top-0 z-40 border-b border-slate-800">
+            <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="text-rose-500 text-xl">✨</span>
+                    <span class="font-bold text-lg font-serif bg-gradient-to-r from-rose-400 to-indigo-400 bg-clip-text text-transparent">annivrahmanindira</span>
+                </div>
+                
+                <!-- User Profile Badge -->
+                <div class="flex items-center gap-3">
+                    <div class="bg-slate-800 px-3 py-1.5 rounded-full border border-slate-700 flex items-center gap-2 text-xs">
+                        <span id="user-badge-dot" class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span id="user-badge-name" class="font-semibold text-slate-200">User</span>
+                    </div>
+                    <button onclick="logout()" class="text-slate-400 hover:text-rose-400 transition-colors p-2 rounded-lg hover:bg-slate-800/50" title="Keluar">
+                        <i class="fa-solid fa-power-off"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tab / URL Fragment Navigation Bar -->
+            <div class="bg-slate-900 border-t border-slate-800/60 overflow-x-auto">
+                <div class="max-w-6xl mx-auto px-2 flex justify-start md:justify-center gap-1 text-sm font-medium">
+                    <a href="#home" id="nav-home" class="px-4 py-3 text-slate-400 hover:text-white whitespace-nowrap transition-all border-b-2 border-transparent flex items-center gap-1.5">
+                        <i class="fa-solid fa-heart"></i> Beranda
+                    </a>
+                    <a href="#chat" id="nav-chat" class="px-4 py-3 text-slate-400 hover:text-white whitespace-nowrap transition-all border-b-2 border-transparent flex items-center gap-1.5">
+                        <i class="fa-solid fa-comments"></i> Obrolan
+                    </a>
+                    <a href="#gallery" id="nav-gallery" class="px-4 py-3 text-slate-400 hover:text-white whitespace-nowrap transition-all border-b-2 border-transparent flex items-center gap-1.5">
+                        <i class="fa-solid fa-images"></i> Kenangan
+                    </a>
+                    <a href="#notes" id="nav-notes" class="px-4 py-3 text-slate-400 hover:text-white whitespace-nowrap transition-all border-b-2 border-transparent flex items-center gap-1.5">
+                        <i class="fa-solid fa-note-sticky"></i> Catatan
+                    </a>
+                    <a href="#wishes" id="nav-wishes" class="px-4 py-3 text-slate-400 hover:text-white whitespace-nowrap transition-all border-b-2 border-transparent flex items-center gap-1.5">
+                        <i class="fa-solid fa-gift"></i> Ucapan
+                    </a>
+                    <a href="#admin" id="nav-admin" class="px-4 py-3 text-slate-400 hover:text-white whitespace-nowrap transition-all border-b-2 border-transparent flex items-center gap-1.5">
+                        <i class="fa-solid fa-user-shield"></i> Admin
+                    </a>
+                </div>
+            </div>
+        </nav>
+
+        <!-- MAIN BODY SECTION -->
+        <main class="max-w-6xl mx-auto px-4 py-6 w-full flex-1">
+
+            <!-- HOME SECTION -->
+            <section id="sec-home" class="space-y-8 hidden">
+                <!-- Anniversary Celebration Header -->
+                <div class="bg-gradient-to-r from-rose-950/40 via-indigo-950/30 to-slate-900 border border-rose-900/30 rounded-3xl p-6 text-center shadow-xl relative overflow-hidden">
+                    <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(244,63,94,0.08)_0,transparent_100%)]"></div>
+                    <span class="text-3xl animate-bounce inline-block">🌹</span>
+                    <h2 class="text-3xl font-bold font-serif mt-2">Selamat Hari Jadi, Sayang!</h2>
+                    <p class="text-rose-300 text-sm mt-1">9 Januari 2024 • Rahman & Indira</p>
+                    
+                    <!-- Dynamic Year Counter -->
+                    <div class="mt-4 inline-block bg-rose-500/10 border border-rose-500/20 px-4 py-2 rounded-full">
+                        <span id="dynamic-year-counter" class="text-rose-200 font-semibold text-sm">Menghitung hubungan kita...</span>
+                    </div>
+                </div>
+
+                <!-- Anniversary Countdown (Flip Style) -->
+                <div class="bg-slate-900/60 border border-slate-800 rounded-3xl p-6 text-center">
+                    <h3 class="text-slate-300 font-semibold text-sm mb-4 tracking-wider uppercase"><i class="fa-solid fa-hourglass-half text-rose-400 mr-2"></i>Hitung Mundur Anniversary Berikutnya</h3>
+                    <div class="flex justify-center items-center gap-3">
+                        <!-- Days -->
+                        <div class="flex flex-col items-center">
+                            <div class="flip-card" id="anniv-d-card">
+                                <div class="flip-card-top" id="anniv-d-top">00</div>
+                                <div class="flip-card-bottom" id="anniv-d-bottom">00</div>
+                            </div>
+                            <span class="text-xs text-slate-400 mt-2 font-medium">Hari</span>
+                        </div>
+                        <span class="text-xl font-bold text-slate-600 mb-6">:</span>
+                        <!-- Hours -->
+                        <div class="flex flex-col items-center">
+                            <div class="flip-card" id="anniv-h-card">
+                                <div class="flip-card-top" id="anniv-h-top">00</div>
+                                <div class="flip-card-bottom" id="anniv-h-bottom">00</div>
+                            </div>
+                            <span class="text-xs text-slate-400 mt-2 font-medium">Jam</span>
+                        </div>
+                        <span class="text-xl font-bold text-slate-600 mb-6">:</span>
+                        <!-- Minutes -->
+                        <div class="flex flex-col items-center">
+                            <div class="flip-card" id="anniv-m-card">
+                                <div class="flip-card-top" id="anniv-m-top">00</div>
+                                <div class="flip-card-bottom" id="anniv-m-bottom">00</div>
+                            </div>
+                            <span class="text-xs text-slate-400 mt-2 font-medium">Menit</span>
+                        </div>
+                        <span class="text-xl font-bold text-slate-600 mb-6">:</span>
+                        <!-- Seconds -->
+                        <div class="flex flex-col items-center">
+                            <div class="flip-card" id="anniv-s-card">
+                                <div class="flip-card-top" id="anniv-s-top">00</div>
+                                <div class="flip-card-bottom" id="anniv-s-bottom">00</div>
+                            </div>
+                            <span class="text-xs text-slate-400 mt-2 font-medium">Detik</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Birthday Countdowns Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Rahman's Birthday Countdown -->
+                    <div class="bg-slate-900/60 border border-slate-800 rounded-3xl p-6 flex flex-col justify-between">
+                        <div>
+                            <div class="flex justify-between items-start mb-4">
+                                <div>
+                                    <h4 class="font-bold text-slate-200">Ulang Tahun Rahman</h4>
+                                    <p class="text-xs text-slate-400">9 November 2011</p>
+                                </div>
+                                <span class="bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 text-xs px-2.5 py-1 rounded-full font-semibold">Cowo 👦</span>
+                            </div>
+                            <!-- Countdown -->
+                            <div class="flex items-center gap-2 mt-2" id="rahman-bday-timer">
+                                <span class="text-2xl font-bold text-indigo-400" id="rahman-bday-d">00</span> <span class="text-xs text-slate-400">Hari lagi</span>
+                            </div>
+                        </div>
+                        <div class="border-t border-slate-800/80 mt-4 pt-3 flex justify-between items-center text-xs text-slate-400">
+                            <span>Status:</span>
+                            <span id="rahman-bday-status" class="font-semibold text-indigo-300">Menghitung...</span>
+                        </div>
+                    </div>
+
+                    <!-- Indira's Birthday Countdown -->
+                    <div class="bg-slate-900/60 border border-slate-800 rounded-3xl p-6 flex flex-col justify-between">
+                        <div>
+                            <div class="flex justify-between items-start mb-4">
+                                <div>
+                                    <h4 class="font-bold text-slate-200">Ulang Tahun Indira</h4>
+                                    <p class="text-xs text-slate-400">8 Maret 2011</p>
+                                </div>
+                                <span class="bg-rose-500/10 text-rose-400 border border-rose-500/20 text-xs px-2.5 py-1 rounded-full font-semibold">Cewe 👧</span>
+                            </div>
+                            <!-- Countdown -->
+                            <div class="flex items-center gap-2 mt-2" id="indira-bday-timer">
+                                <span class="text-2xl font-bold text-rose-400" id="indira-bday-d">00</span> <span class="text-xs text-slate-400">Hari lagi</span>
+                            </div>
+                        </div>
+                        <div class="border-t border-slate-800/80 mt-4 pt-3 flex justify-between items-center text-xs text-slate-400">
+                            <span>Status:</span>
+                            <span id="indira-bday-status" class="font-semibold text-rose-300">Menghitung...</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- CHAT SECTION -->
+            <section id="sec-chat" class="hidden">
+                <div class="bg-slate-900 border border-slate-800 rounded-3xl flex flex-col h-[75vh] overflow-hidden">
+                    <!-- Chat Header -->
+                    <div class="bg-slate-800/50 px-6 py-4 border-b border-slate-800 flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-rose-500 to-indigo-500 flex items-center justify-center text-white font-bold text-lg">
+                                <i class="fa-solid fa-comments"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-slate-200 text-sm">Ruang Obrolan Rahasia</h3>
+                                <p class="text-xs text-emerald-400 flex items-center gap-1">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Hanya Anda berdua yang dapat membaca
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Chat Messages List -->
+                    <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-4">
+                        <!-- Messages will load dynamically -->
+                    </div>
+
+                    <!-- Chat Input -->
+                    <form id="chat-form" class="p-4 bg-slate-900 border-t border-slate-800/80 flex gap-2">
+                        <input type="text" id="chat-input" placeholder="Tulis pesan mesra di sini..." autocomplete="off" class="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-slate-200 text-sm focus:outline-none focus:border-rose-500 transition-colors">
+                        <button type="submit" class="bg-rose-500 hover:bg-rose-600 text-white p-3 rounded-xl transition-all active:scale-95 flex items-center justify-center w-12 h-12">
+                            <i class="fa-solid fa-paper-plane"></i>
+                        </button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- GALLERY SECTION -->
+            <section id="sec-gallery" class="space-y-6 hidden">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                        <h2 class="text-2xl font-bold font-serif">Album Kenangan</h2>
+                        <p class="text-slate-400 text-xs mt-1">Simpan setiap detik kebersamaan Anda disini.</p>
+                    </div>
+                    
+                    <!-- Upload Controls Card -->
+                    <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl flex flex-wrap items-center gap-3">
+                        <label class="text-xs font-semibold text-slate-400">Unggah ke kategori:</label>
+                        <select id="upload-category" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none">
+                            <option value="bersama">Foto Bersama (Berdua)</option>
+                            <option value="rahman">Foto Rahman (Hanya Rahman)</option>
+                            <option value="indira">Foto Indira (Hanya Indira)</option>
+                        </select>
+                        <input type="file" id="photo-file-input" accept="image/*" class="hidden" onchange="handlePhotoUpload(event)">
+                        <button onclick="triggerPhotoUpload()" class="bg-rose-500 hover:bg-rose-600 text-white text-xs font-semibold px-4 py-2 rounded-lg transition-all active:scale-95 flex items-center gap-1.5">
+                            <i class="fa-solid fa-cloud-arrow-up"></i> Unggah Foto
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Gallery Category Tabs -->
+                <div class="flex border-b border-slate-800 gap-2">
+                    <button onclick="setGalleryTab('bersama')" id="tab-gal-bersama" class="px-4 py-2 text-sm font-semibold border-b-2 border-rose-500 text-rose-500 transition-all">
+                        Foto Bersama
+                    </button>
+                    <button onclick="setGalleryTab('rahman')" id="tab-gal-rahman" class="px-4 py-2 text-sm font-semibold border-b-2 border-transparent text-slate-400 hover:text-white transition-all">
+                        Foto Rahman
+                    </button>
+                    <button onclick="setGalleryTab('indira')" id="tab-gal-indira" class="px-4 py-2 text-sm font-semibold border-b-2 border-transparent text-slate-400 hover:text-white transition-all">
+                        Foto Indira
+                    </button>
+                </div>
+
+                <!-- Photos Grid -->
+                <div id="photos-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <!-- Photos will load dynamically -->
+                </div>
+            </section>
+
+            <!-- NOTES SECTION -->
+            <section id="sec-notes" class="space-y-6 hidden">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h2 class="text-2xl font-bold font-serif">Catatan Bersama</h2>
+                        <p class="text-slate-400 text-xs mt-1">Tulis rencana masa depan, janji, atau curahan hati di sini.</p>
+                    </div>
+                    <button onclick="openNoteModal()" class="bg-gradient-to-r from-rose-500 to-indigo-600 hover:from-rose-600 hover:to-indigo-700 text-white text-xs font-semibold px-4 py-2 rounded-xl transition-all active:scale-95 flex items-center gap-1.5">
+                        <i class="fa-solid fa-plus"></i> Buat Catatan Baru
+                    </button>
+                </div>
+
+                <!-- Notes Grid -->
+                <div id="notes-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Notes will load dynamically -->
+                </div>
+            </section>
+
+            <!-- WISHES SECTION -->
+            <section id="sec-wishes" class="space-y-6 hidden">
+                <div>
+                    <h2 class="text-2xl font-bold font-serif">Kotak Ucapan & Harapan</h2>
+                    <p class="text-slate-400 text-xs mt-1">Tulis ucapan spesial untuk Anniversary atau Ulang Tahun. Hanya bisa dibaca saat hitung mundur selesai!</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <!-- Write Wish Card -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4">
+                        <h3 class="font-bold text-slate-200 text-sm flex items-center gap-2">
+                            <i class="fa-solid fa-pen-fancy text-rose-400"></i> Tulis Ucapan Baru
+                        </h3>
+                        <div>
+                            <label class="text-xs text-slate-400 block mb-1">Pilih Kategori Ucapan:</label>
+                            <select id="wish-category" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-rose-500">
+                                <option value="anniv">Ucapan Anniversary (9 Jan)</option>
+                                <option value="ultah_rahman">Ucapan Ultah Rahman (9 Nov)</option>
+                                <option value="ultah_indira">Ucapan Ultah Indira (8 Mar)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-xs text-slate-400 block mb-1">Isi Ucapan:</label>
+                            <textarea id="wish-content" rows="4" placeholder="Tulis ucapan terindahmu di sini..." class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-rose-500"></textarea>
+                        </div>
+                        <button onclick="saveWish()" class="w-full bg-rose-500 hover:bg-rose-600 text-white font-semibold py-2.5 rounded-xl transition-all active:scale-95">
+                            Kirim Ucapan
+                        </button>
+                    </div>
+
+                    <!-- Sent / Received Wishes Card -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4">
+                        <h3 class="font-bold text-slate-200 text-sm flex items-center gap-2">
+                            <i class="fa-solid fa-envelope-open-text text-indigo-400"></i> Kotak Surat Masuk
+                        </h3>
+                        <div id="wishes-list" class="space-y-4 max-h-[400px] overflow-y-auto pr-2">
+                            <!-- Wishes display dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ADMIN SECTION -->
+            <section id="sec-admin" class="space-y-6 hidden">
+                <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-xl mx-auto">
+                    <div class="text-center mb-6">
+                        <span class="text-3xl">🔑</span>
+                        <h2 class="text-xl font-bold font-serif mt-2">Portal Rahasia Admin</h2>
+                        <p class="text-xs text-slate-400 mt-1">Masukkan kata sandi admin untuk mengakses pesan rahasia yang dibuat khusus oleh Admin.</p>
+                    </div>
+
+                    <!-- Admin Auth Form -->
+                    <div id="admin-auth-form" class="space-y-4">
+                        <input type="password" id="admin-password" placeholder="Masukkan Sandi Admin..." class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-rose-500 transition-colors text-center">
+                        <button onclick="authenticateAdmin()" class="w-full bg-gradient-to-r from-rose-500 to-indigo-600 hover:from-rose-600 hover:to-indigo-700 text-white font-semibold py-3 rounded-xl transition-all active:scale-95">
+                            Akses Dokumen Rahasia
+                        </button>
+                        <p id="admin-auth-error" class="text-rose-400 text-xs text-center hidden">Sandi salah! Silakan hubungi Admin.</p>
+                    </div>
+
+                    <!-- Admin Controlled Secret Area (Hidden by default) -->
+                    <div id="admin-secret-area" class="space-y-6 hidden">
+                        <div class="border-t border-slate-800 pt-6">
+                            <h3 class="font-bold text-slate-200 text-sm mb-3 flex items-center gap-2">
+                                <i class="fa-solid fa-plus text-rose-400"></i> Buat Pesan Rahasia Baru
+                            </h3>
+                            <textarea id="admin-secret-input" rows="3" placeholder="Tulis pesan rahasia yang hanya bisa dilihat oleh Admin..." class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-rose-500"></textarea>
+                            <button onclick="saveAdminSecret()" class="mt-2 w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 rounded-xl transition-all">
+                                Simpan Pesan Rahasia
+                            </button>
+                        </div>
+
+                        <div class="border-t border-slate-800 pt-6">
+                            <h3 class="font-bold text-slate-200 text-sm mb-3 flex items-center gap-2">
+                                <i class="fa-solid fa-eye text-emerald-400"></i> Daftar Pesan Rahasia Admin
+                            </h3>
+                            <div id="admin-secrets-list" class="space-y-3">
+                                <!-- Loaded dynamically -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- FOOTER -->
+        <footer class="border-t border-slate-800/60 bg-slate-900/40 py-6 text-center text-xs text-slate-500">
+            <p>© 2026 annivrahmanindira. Semua Hak Dilindungi.</p>
+            <p class="mt-1">Dibuat dengan cinta untuk keabadian cinta Rahman & Indira.</p>
+        </footer>
+    </div>
+
+    <!-- NOTE MODAL -->
+    <div id="note-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-md w-full relative">
+            <button onclick="closeNoteModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+            <h3 class="font-bold text-slate-200 text-lg mb-4 font-serif" id="note-modal-title">Buat Catatan Baru</h3>
+            <div class="space-y-4">
+                <input type="text" id="note-title-input" placeholder="Judul Catatan..." class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-rose-500">
+                <textarea id="note-content-input" rows="5" placeholder="Isi catatan..." class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-rose-500"></textarea>
+                <button onclick="saveNote()" class="w-full bg-rose-500 hover:bg-rose-600 text-white font-semibold py-3 rounded-xl transition-all">
+                    Simpan Catatan
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- IMAGE FULLSCREEN PREVIEW MODAL -->
+    <div id="image-modal" class="fixed inset-0 bg-black/95 z-50 flex flex-col items-center justify-center p-4 hidden">
+        <div class="absolute top-4 right-4 flex gap-4">
+            <a id="image-download-btn" href="#" download="annivrahmanindira.jpg" class="bg-slate-800 hover:bg-slate-700 text-white p-3 rounded-full transition-all flex items-center justify-center w-12 h-12" title="Unduh Foto">
+                <i class="fa-solid fa-download"></i>
+            </a>
+            <button onclick="closeImageModal()" class="bg-slate-800 hover:bg-slate-700 text-white p-3 rounded-full transition-all flex items-center justify-center w-12 h-12" title="Tutup">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <img id="image-modal-img" src="" alt="Kenangan" class="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl">
+    </div>
+
+    <!-- FIREBASE SDK & LIVE SCRIPTS -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-analytics.js";
+        import { getDatabase, ref, set, push, onValue, remove, update } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-database.js";
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDKEIMg9blwl1Kd7YDb9omYGjG-K6njm5c",
+            authDomain: "annivrahmanindira.firebaseapp.com",
+            projectId: "annivrahmanindira",
+            storageBucket: "annivrahmanindira.firebasestorage.app",
+            messagingSenderId: "354029563385",
+            appId: "1:354029563385:web:8c6ac9819b12b77d226128",
+            measurementId: "G-9FGVSJYJFW"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const db = getDatabase(app);
+
+        // Application State
+        let currentUser = null; // 'rahman' or 'indira'
+        let currentTab = 'home';
+        let currentGalleryTab = 'bersama';
+        let activeUsersState = { rahman: false, indira: false };
+
+        // Realtime references
+        const activeUsersRef = ref(db, 'activeUsers');
+        const chatRef = ref(db, 'chats');
+        const photosRef = ref(db, 'photos');
+        const notesRef = ref(db, 'notes');
+        const wishesRef = ref(db, 'wishes');
+        const adminSecretsRef = ref(db, 'adminSecrets');
+
+        // Track active users from DB
+        onValue(activeUsersRef, (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                activeUsersState = data;
+            }
+        });
+
+        // Initialize App & Auto Login check
+        window.addEventListener('DOMContentLoaded', () => {
+            const storedUser = localStorage.getItem('anniv_user');
+            if (storedUser) {
+                loginAs(storedUser, true);
+            }
+            // Setup Routing
+            handleRouting();
+            window.addEventListener('hashchange', handleRouting);
+            
+            // Start Countdowns
+            setInterval(updateCountdowns, 1000);
+            updateCountdowns();
+        });
+
+        // Verify anniversary quiz
+        window.verifyQuiz = function() {
+            const answer = document.getElementById('quiz-answer').value.trim();
+            if (answer === '9') {
+                document.getElementById('quiz-step').classList.add('hidden');
+                document.getElementById('name-step').classList.remove('hidden');
+                document.getElementById('login-error').classList.add('hidden');
+            } else {
+                alert('Jawaban kuis salah! Coba ingat-ingat lagi hari istimewa kita.');
+            }
+        };
+
+        window.backToQuiz = function() {
+            document.getElementById('quiz-step').classList.remove('hidden');
+            document.getElementById('name-step').classList.add('hidden');
+        };
+
+        // Handle Login Action
+        document.getElementById('btn-login').addEventListener('click', () => {
+            const nameInput = document.getElementById('user-fullname').value.trim().toLowerCase();
+            const errorEl = document.getElementById('login-error');
+            errorEl.classList.add('hidden');
+
+            let detectedUser = null;
+            if (nameInput === 'hijrah abdur rahman') {
+                detectedUser = 'rahman';
+            } else if (nameInput === 'indira putri rahayu') {
+                detectedUser = 'indira';
+            }
+
+            if (!detectedUser) {
+                errorEl.innerText = "Nama tidak dikenali! Hanya Hijrah Abdur Rahman atau Indira Putri Rahayu yang memiliki akses.";
+                errorEl.classList.remove('hidden');
+                return;
+            }
+
+            // Check if user is already logged in on another device
+            if (activeUsersState[detectedUser] === true) {
+                // If they are already logged in, give option to force reset login (in case session got stuck)
+                if (confirm(`Sistem mendeteksi ${detectedUser === 'rahman' ? 'Hijrah Abdur Rahman' : 'Indira Putri Rahayu'} sedang aktif di perangkat lain. Apakah Anda ingin mereset sesi dan masuk?`)) {
+                    loginAs(detectedUser);
+                }
+            } else {
+                loginAs(detectedUser);
+            }
+        });
+
+        function loginAs(userKey, isAuto = false) {
+            currentUser = userKey;
+            localStorage.setItem('anniv_user', userKey);
+            
+            // Set active status in Firebase
+            update(ref(db, `activeUsers`), {
+                [userKey]: true
+            });
+
+            // Update UI
+            document.getElementById('login-container').classList.add('hidden');
+            document.getElementById('app-container').classList.remove('hidden');
+            
+            const displayName = userKey === 'rahman' ? 'Hijrah Abdur Rahman' : 'Indira Putri Rahayu';
+            document.getElementById('user-badge-name').innerText = displayName;
+            document.getElementById('user-badge-dot').className = `w-2.5 h-2.5 rounded-full ${userKey === 'rahman' ? 'bg-indigo-500' : 'bg-rose-500'} animate-pulse`;
+
+            // Load Firebase data
+            initDataListeners();
+
+            // Redirect to home if no hash
+            if (!window.location.hash) {
+                window.location.hash = '#home';
+            }
+        }
+
+        window.logout = function() {
+            if (currentUser) {
+                // Set inactive status in Firebase
+                update(ref(db, `activeUsers`), {
+                    [currentUser]: false
+                });
+            }
+            localStorage.removeItem('anniv_user');
+            currentUser = null;
+            document.getElementById('login-container').classList.remove('hidden');
+            document.getElementById('app-container').classList.add('hidden');
+            document.getElementById('quiz-step').classList.remove('hidden');
+            document.getElementById('name-step').classList.add('hidden');
+            document.getElementById('user-fullname').value = '';
+            document.getElementById('quiz-answer').value = '';
+        };
+
+        // Handle Routing / Tab switching via URL Fragment
+        function handleRouting() {
+            const hash = window.location.hash || '#home';
+            const views = ['home', 'chat', 'gallery', 'notes', 'wishes', 'admin'];
+            
+            views.forEach(view => {
+                const sec = document.getElementById(`sec-${view}`);
+                const nav = document.getElementById(`nav-${view}`);
+                if (hash === `#${view}`) {
+                    sec.classList.remove('hidden');
+                    nav.classList.add('nav-active');
+                    currentTab = view;
+                } else {
+                    sec.classList.add('hidden');
+                    nav.classList.remove('nav-active');
+                }
+            });
+
+            // Specific tab initializations
+            if (hash === '#chat') {
+                scrollToBottom('chat-messages');
+            }
+        }
+
+        // --- REALTIME DATA LISTENERS ---
+        function initDataListeners() {
+            // 1. Chat listener
+            onValue(chatRef, (snapshot) => {
+                const data = snapshot.val();
+                const container = document.getElementById('chat-messages');
+                container.innerHTML = '';
+                if (data) {
+                    Object.keys(data).forEach(key => {
+                        const msg = data[key];
+                        const isMe = msg.sender === currentUser;
+                        const senderName = msg.sender === 'rahman' ? 'Rahman' : 'Indira';
+                        const bubbleClass = isMe 
+                            ? 'bg-rose-600 text-white rounded-br-none ml-auto' 
+                            : 'bg-slate-800 text-slate-100 rounded-bl-none';
+                        
+                        const msgHtml = `
+                            <div class="flex flex-col max-w-[80%] ${isMe ? 'ml-auto text-right' : ''}">
+                                <span class="text-[10px] text-slate-500 mb-1 px-1">${senderName} • ${formatTime(msg.timestamp)}</span>
+                                <div class="px-4 py-2.5 rounded-2xl text-sm ${bubbleClass} shadow-md break-words">
+                                    ${escapeHTML(msg.text)}
+                                </div>
+                            </div>
+                        `;
+                        container.insertAdjacentHTML('beforeend', msgHtml);
+                    });
+                    scrollToBottom('chat-messages');
+                } else {
+                    container.innerHTML = `<div class="text-center text-slate-500 text-xs py-10">Belum ada obrolan. Kirim pesan pertamamu! 💖</div>`;
+                }
+            });
+
+            // 2. Photos listener
+            onValue(photosRef, (snapshot) => {
+                renderPhotos(snapshot.val());
+            });
+
+            // 3. Notes listener
+            onValue(notesRef, (snapshot) => {
+                const data = snapshot.val();
+                const container = document.getElementById('notes-grid');
+                container.innerHTML = '';
+                if (data) {
+                    Object.keys(data).forEach(key => {
+                        const note = data[key];
+                        const noteHtml = `
+                            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between hover:border-slate-700 transition-all">
+                                <div>
+                                    <div class="flex justify-between items-start gap-2 mb-2">
+                                        <h4 class="font-bold text-slate-200 text-sm break-words">${escapeHTML(note.title)}</h4>
+                                        <button onclick="deleteNote('${key}')" class="text-slate-500 hover:text-rose-500 transition-colors text-xs p-1">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
+                                    </div>
+                                    <p class="text-xs text-slate-400 whitespace-pre-line break-words leading-relaxed">${escapeHTML(note.content)}</p>
+                                </div>
+                                <div class="border-t border-slate-800/80 mt-4 pt-3 flex justify-between items-center text-[10px] text-slate-500">
+                                    <span>Oleh: <strong class="text-slate-400">${note.author === 'rahman' ? 'Rahman' : 'Indira'}</strong></span>
+                                    <span>${new Date(note.timestamp).toLocaleDateString('id-ID')}</span>
+                                </div>
+                            </div>
+                        `;
+                        container.insertAdjacentHTML('beforeend', noteHtml);
+                    });
+                } else {
+                    container.innerHTML = `
+                        <div class="col-span-full bg-slate-900/40 border border-dashed border-slate-800 rounded-2xl p-8 text-center text-slate-500 text-xs">
+                            Belum ada catatan bersama. Buat catatan pertamamu!
+                        </div>
+                    `;
+                }
+            });
+
+            // 4. Wishes listener
+            onValue(wishesRef, (snapshot) => {
+                renderWishes(snapshot.val());
+            });
+        }
+
+        // --- COUNTDOWN LOGIC (FLIP-LIKE & DYNAMIC YEARS) ---
+        function updateCountdowns() {
+            const now = new Date();
+            const currentYear = now.getFullYear();
+
+            // Dynamic Year Counter: Pacaran 9 Jan 2024
+            const startDate = new Date('2024-01-09T00:00:00');
+            // Calculating exact years since 2021 (since user states "kami udah 3 tahun pacaran, menuju 4 tahun" in 2024)
+            // Let's set the baseline dating start year as 2021 to match "3 years pacaran" in 2024.
+            const baseStartYear = 2021; 
+            let relationshipYears = currentYear - baseStartYear;
+            
+            // If we haven't reached Jan 9 of current year, subtract 1 year
+            const annivThisYear = new Date(currentYear, 0, 9);
+            if (now < annivThisYear) {
+                relationshipYears--;
+            }
+            
+            const nextAnnivYear = relationshipYears + 1;
+            document.getElementById('dynamic-year-counter').innerText = `Kita sudah ${relationshipYears} tahun pacaran, menuju ${nextAnnivYear} tahun!`;
+
+            // 1. Anniversary Countdown (Resets to next Jan 9th)
+            let targetAnniv = new Date(currentYear, 0, 9);
+            if (now > targetAnniv) {
+                targetAnniv = new Date(currentYear + 1, 0, 9);
+            }
+            const diffAnniv = targetAnniv - now;
+            const annivDays = Math.floor(diffAnniv / (1000 * 60 * 60 * 24));
+            const annivHours = Math.floor((diffAnniv % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const annivMins = Math.floor((diffAnniv % (1000 * 60 * 60)) / (1000 * 60));
+            const annivSecs = Math.floor((diffAnniv % (1000 * 60)) / 1000);
+
+            updateFlipCard('anniv-d', padZero(annivDays));
+            updateFlipCard('anniv-h', padZero(annivHours));
+            updateFlipCard('anniv-m', padZero(annivMins));
+            updateFlipCard('anniv-s', padZero(annivSecs));
+
+            // 2. Rahman Birthday Countdown: Nov 9, 2011
+            let targetRahman = new Date(currentYear, 10, 9);
+            if (now > targetRahman) {
+                targetRahman = new Date(currentYear + 1, 10, 9);
+            }
+            const diffRahman = targetRahman - now;
+            const rahmanDays = Math.floor(diffRahman / (1000 * 60 * 60 * 24));
+            document.getElementById('rahman-bday-d').innerText = padZero(rahmanDays);
+            document.getElementById('rahman-bday-status').innerText = rahmanDays === 0 ? "Selamat Ulang Tahun Rahman! 🎉" : "Menghitung Hari...";
+
+            // 3. Indira Birthday Countdown: Mar 8, 2011
+            let targetIndira = new Date(currentYear, 2, 8);
+            if (now > targetIndira) {
+                targetIndira = new Date(currentYear + 1, 2, 8);
+            }
+            const diffIndira = targetIndira - now;
+            const indiraDays = Math.floor(diffIndira / (1000 * 60 * 60 * 24));
+            document.getElementById('indira-bday-d').innerText = padZero(indiraDays);
+            document.getElementById('indira-bday-status').innerText = indiraDays === 0 ? "Selamat Ulang Tahun Indira! 🎉" : "Menghitung Hari...";
+        }
+
+        // Helper to update flip-card UI with subtle scale animation
+        function updateFlipCard(idPrefix, newValue) {
+            const topEl = document.getElementById(`${idPrefix}-top`);
+            const bottomEl = document.getElementById(`${idPrefix}-bottom`);
+            const cardEl = document.getElementById(`${idPrefix}-card`);
+            
+            if (topEl.innerText !== newValue) {
+                topEl.innerText = newValue;
+                bottomEl.innerText = newValue;
+                
+                // Trigger digital change scale animation
+                cardEl.classList.remove('digit-changed');
+                void cardEl.offsetWidth; // trigger reflow
+                cardEl.classList.add('digit-changed');
+            }
+        }
+
+        // --- CHAT ACTIONS ---
+        document.getElementById('chat-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const input = document.getElementById('chat-input');
+            const text = input.value.trim();
+            if (!text) return;
+
+            const newMsgRef = push(chatRef);
+            set(newMsgRef, {
+                sender: currentUser,
+                text: text,
+                timestamp: Date.now()
+            });
+            input.value = '';
+        });
+
+        // --- PHOTO GALLERY ACTIONS ---
+        window.triggerPhotoUpload = function() {
+            document.getElementById('photo-file-input').click();
+        };
+
+        window.handlePhotoUpload = function(event) {
+            const file = event.target.files[0];
+            const category = document.getElementById('upload-category').value;
+
+            if (!file) return;
+
+            // Enforce upload rules:
+            // Rahman can only upload to 'rahman' and 'bersama'
+            // Indira can only upload to 'indira' and 'bersama'
+            if (category === 'rahman' && currentUser !== 'rahman') {
+                alert('Hanya Rahman yang boleh mengunggah foto ke kategori Foto Rahman!');
+                return;
+            }
+            if (category === 'indira' && currentUser !== 'indira') {
+                alert('Hanya Indira yang boleh mengunggah foto ke kategori Foto Indira!');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const base64Data = e.target.result;
+                const newPhotoRef = push(photosRef);
+                set(newPhotoRef, {
+                    category: category,
+                    url: base64Data,
+                    uploader: currentUser,
+                    timestamp: Date.now()
+                }).then(() => {
+                    alert('Foto berhasil diunggah!');
+                }).catch(err => {
+                    alert('Gagal mengunggah foto: ' + err.message);
+                });
+            };
+            reader.readAsDataURL(file);
+        };
+
+        window.setGalleryTab = function(tab) {
+            currentGalleryTab = tab;
+            const tabs = ['bersama', 'rahman', 'indira'];
+            tabs.forEach(t => {
+                const el = document.getElementById(`tab-gal-${t}`);
+                if (t === tab) {
+                    el.className = "px-4 py-2 text-sm font-semibold border-b-2 border-rose-500 text-rose-500 transition-all";
+                } else {
+                    el.className = "px-4 py-2 text-sm font-semibold border-b-2 border-transparent text-slate-400 hover:text-white transition-all";
+                }
+            });
+            // Re-fetch / Re-render photos
+            onValue(photosRef, (snapshot) => {
+                renderPhotos(snapshot.val());
+            }, { onlyOnce: true });
+        };
+
+        function renderPhotos(data) {
+            const container = document.getElementById('photos-grid');
+            container.innerHTML = '';
+            let count = 0;
+
+            if (data) {
+                Object.keys(data).forEach(key => {
+                    const photo = data[key];
+                    if (photo.category === currentGalleryTab) {
+                        count++;
+                        const cardHtml = `
+                            <div class="relative group aspect-square bg-slate-800 rounded-2xl overflow-hidden border border-slate-800 hover:border-slate-700 transition-all">
+                                <img src="${photo.url}" alt="Kenangan" class="w-full h-full object-cover">
+                                <div class="absolute inset-0 bg-slate-950/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+                                    <button onclick="viewFullscreen('${photo.url}')" class="bg-white/10 hover:bg-white/20 text-white p-2.5 rounded-full transition-all" title="Lihat">
+                                        <i class="fa-solid fa-expand"></i>
+                                    </button>
+                                    <button onclick="deletePhoto('${key}', '${photo.uploader}')" class="bg-rose-500/80 hover:bg-rose-600 text-white p-2.5 rounded-full transition-all" title="Hapus">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                        container.insertAdjacentHTML('beforeend', cardHtml);
+                    }
+                });
+            }
+
+            if (count === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full bg-slate-900/40 border border-dashed border-slate-800 rounded-2xl p-12 text-center text-slate-500 text-xs">
+                        Belum ada foto di kategori ini. Mulai unggah kenangan indah Anda!
+                    </div>
+                `;
+            }
+        }
+
+        window.deletePhoto = function(key, uploader) {
+            if (currentUser !== uploader) {
+                alert('Anda hanya bisa menghapus foto yang Anda unggah sendiri!');
+                return;
+            }
+            if (confirm('Apakah Anda yakin ingin menghapus foto kenangan ini?')) {
+                remove(ref(db, `photos/${key}`));
+            }
+        };
+
+        window.viewFullscreen = function(url) {
+            const modal = document.getElementById('image-modal');
+            const img = document.getElementById('image-modal-img');
+            const dlBtn = document.getElementById('image-download-btn');
+            img.src = url;
+            dlBtn.href = url;
+            modal.classList.remove('hidden');
+        };
+
+        window.closeImageModal = function() {
+            document.getElementById('image-modal').classList.add('hidden');
+        };
+
+        // --- NOTES ACTIONS ---
+        window.openNoteModal = function() {
+            document.getElementById('note-title-input').value = '';
+            document.getElementById('note-content-input').value = '';
+            document.getElementById('note-modal').classList.remove('hidden');
+        };
+
+        window.closeNoteModal = function() {
+            document.getElementById('note-modal').classList.add('hidden');
+        };
+
+        window.saveNote = function() {
+            const title = document.getElementById('note-title-input').value.trim();
+            const content = document.getElementById('note-content-input').value.trim();
+
+            if (!title || !content) {
+                alert('Judul dan isi catatan tidak boleh kosong!');
+                return;
+            }
+
+            const newNoteRef = push(notesRef);
+            set(newNoteRef, {
+                title: title,
+                content: content,
+                author: currentUser,
+                timestamp: Date.now()
+            }).then(() => {
+                closeNoteModal();
+            });
+        };
+
+        window.deleteNote = function(key) {
+            if (confirm('Hapus catatan ini?')) {
+                remove(ref(db, `notes/${key}`));
+            }
+        };
+
+        // --- WISHES ACTIONS ---
+        window.saveWish = function() {
+            const category = document.getElementById('wish-category').value;
+            const content = document.getElementById('wish-content').value.trim();
+
+            if (!content) {
+                alert('Silakan tulis ucapan Anda terlebih dahulu!');
+                return;
+            }
+
+            const newWishRef = push(wishesRef);
+            set(newWishRef, {
+                category: category,
+                content: content,
+                sender: currentUser,
+                timestamp: Date.now()
+            }).then(() => {
+                alert('Ucapan berhasil disimpan di kotak surat rahasia!');
+                document.getElementById('wish-content').value = '';
+            });
+        };
+
+        function renderWishes(data) {
+            const container = document.getElementById('wishes-list');
+            container.innerHTML = '';
+            const now = new Date();
+            const currentYear = now.getFullYear();
+
+            // Determine if countdowns are completed
+            const isAnnivCompleted = (now.getMonth() === 0 && now.getDate() === 9);
+            const isRahmanBdayCompleted = (now.getMonth() === 10 && now.getDate() === 9);
+            const isIndiraBdayCompleted = (now.getMonth() === 2 && now.getDate() === 8);
+
+            if (data) {
+                Object.keys(data).forEach(key => {
+                    const wish = data[key];
+                    const senderName = wish.sender === 'rahman' ? 'Rahman' : 'Indira';
+                    
+                    // Lock logic based on categories
+                    let isLocked = true;
+                    let lockReason = "";
+
+                    if (wish.category === 'anniv') {
+                        isLocked = !isAnnivCompleted;
+                        lockReason = "Hanya terbuka pada Hari Anniversary (9 Januari)";
+                    } else if (wish.category === 'ultah_rahman') {
+                        isLocked = !isRahmanBdayCompleted;
+                        lockReason = "Hanya terbuka pada Hari Ultah Rahman (9 November)";
+                    } else if (wish.category === 'ultah_indira') {
+                        isLocked = !isIndiraBdayCompleted;
+                        lockReason = "Hanya terbuka pada Hari Ultah Indira (8 Maret)";
+                    }
+
+                    // Always allow the sender to see their own wish
+                    if (wish.sender === currentUser) {
+                        isLocked = false;
+                    }
+
+                    let wishContentHtml = '';
+                    if (isLocked) {
+                        wishContentHtml = `
+                            <div class="bg-slate-800/80 border border-slate-700/50 rounded-2xl p-4 text-center">
+                                <i class="fa-solid fa-lock text-rose-400 text-xl mb-2"></i>
+                                <p class="text-xs text-slate-300 font-semibold">Ucapan dari ${senderName} Terkunci</p>
+                                <p class="text-[10px] text-slate-500 mt-1">${lockReason}</p>
+                            </div>
+                        `;
+                    } else {
+                        wishContentHtml = `
+                            <div class="bg-slate-800/40 border border-slate-800 rounded-2xl p-4">
+                                <div class="flex justify-between items-start mb-2">
+                                    <span class="text-xs font-bold text-rose-400">${senderName}</span>
+                                    <span class="text-[10px] text-slate-500">${new Date(wish.timestamp).toLocaleDateString('id-ID')}</span>
+                                </div>
+                                <p class="text-xs text-slate-300 whitespace-pre-line leading-relaxed italic">"${escapeHTML(wish.content)}"</p>
+                                <div class="mt-2 text-right">
+                                    <span class="text-[9px] bg-slate-800 px-2 py-0.5 rounded text-slate-400 uppercase tracking-wider">${wish.category.replace('_', ' ')}</span>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    container.insertAdjacentHTML('beforeend', wishContentHtml);
+                });
+            } else {
+                container.innerHTML = `
+                    <div class="text-center text-slate-500 text-xs py-8">
+                        Belum ada ucapan spesial yang dikirimkan.
+                    </div>
+                `;
+            }
+        }
+
+        // --- ADMIN / SECRET MESSAGE ACTIONS ---
+        window.authenticateAdmin = function() {
+            const pwd = document.getElementById('admin-password').value;
+            // Admin password requested in prompt: 912024 (Anniv date code)
+            if (pwd === '912024') {
+                document.getElementById('admin-auth-form').classList.add('hidden');
+                document.getElementById('admin-secret-area').classList.remove('hidden');
+                loadAdminSecrets();
+            } else {
+                const err = document.getElementById('admin-auth-error');
+                err.classList.remove('hidden');
+            }
+        };
+
+        window.saveAdminSecret = function() {
+            const content = document.getElementById('admin-secret-input').value.trim();
+            if (!content) return;
+
+            const newSecretRef = push(adminSecretsRef);
+            set(newSecretRef, {
+                content: content,
+                author: currentUser,
+                timestamp: Date.now()
+            }).then(() => {
+                document.getElementById('admin-secret-input').value = '';
+                loadAdminSecrets();
+            });
+        };
+
+        function loadAdminSecrets() {
+            onValue(adminSecretsRef, (snapshot) => {
+                const data = snapshot.val();
+                const container = document.getElementById('admin-secrets-list');
+                container.innerHTML = '';
+                if (data) {
+                    Object.keys(data).forEach(key => {
+                        const sec = data[key];
+                        const itemHtml = `
+                            <div class="bg-indigo-950/20 border border-indigo-900/40 rounded-xl p-4 flex justify-between items-start gap-4">
+                                <div class="flex-1">
+                                    <p class="text-xs text-slate-300 break-words">${escapeHTML(sec.content)}</p>
+                                    <span class="text-[9px] text-slate-500 block mt-2">Dibuat oleh Admin • ${new Date(sec.timestamp).toLocaleString('id-ID')}</span>
+                                </div>
+                                <button onclick="deleteAdminSecret('${key}')" class="text-slate-500 hover:text-rose-400 p-1 text-xs">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </div>
+                        `;
+                        container.insertAdjacentHTML('beforeend', itemHtml);
+                    });
+                } else {
+                    container.innerHTML = `<p class="text-xs text-slate-500 text-center py-4">Belum ada pesan rahasia admin.</p>`;
+                }
+            });
+        }
+
+        window.deleteAdminSecret = function(key) {
+            if (confirm('Hapus pesan rahasia ini?')) {
+                remove(ref(db, `adminSecrets/${key}`));
+            }
+        };
+
+        // --- GENERAL UTILITY FUNCTIONS ---
+        function padZero(num) {
+            return num < 10 ? '0' + num : num;
+        }
+
+        function formatTime(timestamp) {
+            const d = new Date(timestamp);
+            return `${padZero(d.getHours())}:${padZero(d.getMinutes())}`;
+        }
+
+        function escapeHTML(str) {
+            return str.replace(/[&<>'"]/g, 
+                tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+            );
+        }
+
+        function scrollToBottom(elementId) {
+            const el = document.getElementById(elementId);
+            if (el) {
+                setTimeout(() => {
+                    el.scrollTop = el.scrollHeight;
+                }, 50);
+            }
+        }
+    </script>
+
+    <!-- InstanWeb AI Resiliency Fallback Script (Anti-Blank-Screen) -->
+    <script id="instanweb-resiliency-fallback">
+    (function() {
+        window.addEventListener('DOMContentLoaded', function() {
+            setTimeout(function() {
+                if (!window.db) {
+                    console.warn("⚠️ Firebase load failed, blocked, or slow (e.g. CORS on local file:// or bad version). Instantiating highly resilient LocalStorage mock engine...");
+                    setupMockFirebase();
+                    
+                    // Re-trigger standard load routes
+                    if (typeof handleRoute === 'function') {
+                        console.log("Re-executing routes in offline sandbox...");
+                        handleRoute();
+                    }
+                }
+            }, 180);
+        });
+
+        function setupMockFirebase() {
+            function getLocalData(colName) {
+                const key = "mock_db_" + colName;
+                const data = localStorage.getItem(key);
+                if (!data) {
+                    let initial = [];
+                    if (colName === 'settings') {
+                        initial = [{ id: 'global', showScore: true, paymentActive: true }];
+                    } else if (colName === 'exams') {
+                        initial = [
+                            {
+                                id: 'seed_math',
+                                code: 'MATE23',
+                                subject: 'Matematika Dasar',
+                                duration: '60',
+                                status: 'Aktif',
+                                isKisiKisi: true,
+                                questions: [
+                                    {
+                                        level: 'SD/MI',
+                                        text: 'Berapakah hasil dari 25 x 4 + 50?',
+                                        options: ['100', '150', '200', '250'],
+                                        correctIndex: 1,
+                                        image: ''
+                                    },
+                                    {
+                                        level: 'SD/MI',
+                                        text: 'Jika sebuah segitiga memiliki alas 10 cm dan tinggi 8 cm, berapakah luas segitiga tersebut?',
+                                        options: ['40 cm²', '80 cm²', '20 cm²', '16 cm²'],
+                                        correctIndex: 0,
+                                        image: ''
+                                    },
+                                    {
+                                        level: 'SMP/MTS',
+                                        text: 'Tentukan nilai x dari persamaan kuadrat x² - 5x + 6 = 0!',
+                                        options: ['x = 2 atau x = 3', 'x = -2 atau x = -3', 'x = 1 atau x = 6', 'x = -1 atau x = -6'],
+                                        correctIndex: 0,
+                                        image: ''
+                                    },
+                                    {
+                                        level: 'SMA/SMK',
+                                        text: 'Berapakah turunan pertama f_prime(x) dari f(x) = 3x³ - 5x² + 2x - 7?',
+                                        options: ['f_prime(x) = 9x² - 10x + 2', 'f_prime(x) = 3x² - 5x + 2', 'f_prime(x) = 9x³ - 10x² + 2', 'f_prime(x) = 6x² - 5x + 2'],
+                                        correctIndex: 0,
+                                        image: ''
+                                    }
+                                ]
+                            }
+                        ];
+                    } else if (colName === 'testimonials') {
+                        initial = [
+                            {
+                                id: 'testi_1',
+                                img: 'https://i.ibb.co.com/8DZVQkBv/sertifikat-manzcodecbt.png',
+                                day: 'Senin',
+                                date: '25',
+                                month: 'Mei',
+                                year: '2026',
+                                time: '09:30',
+                                timestamp: { seconds: Date.now() / 1000 }
+                            }
+                        ];
+                    } else if (colName === 'broadcasts') {
+                        initial = [
+                            {
+                                id: 'bc_welcome',
+                                target: 'ALL',
+                                text: 'Selamat datang di ManzCodeCBT! Gunakan Akun Ujian Anda atau masukkan kode ujian di atas untuk berpartisipasi.',
+                                timestamp: { seconds: Date.now() / 1000 }
+                            }
+                        ];
+                    }
+                    localStorage.setItem(key, JSON.stringify(initial));
+                    return initial;
+                }
+                return JSON.parse(data);
+            }
+
+            function setLocalData(colName, list) {
+                localStorage.setItem("mock_db_" + colName, JSON.stringify(list));
+                triggerListeners(colName);
+            }
+
+            const listeners = {};
+            function triggerListeners(colName) {
+                if (listeners[colName]) {
+                    listeners[colName].forEach(function(cb) { cb(); });
+                }
+            }
+
+            window.db = { isMock: true };
+            window.collection = function(db, colName) { return { type: 'collection', name: colName }; };
+            window.doc = function(db, colName, docId) { return { type: 'doc', col: colName, id: docId }; };
+            window.query = function(col, constraints) { return { type: 'query', col: col.name, constraints: Array.prototype.slice.call(arguments, 1) }; };
+            window.where = function(field, op, val) { return { type: 'where', field: field, op: op, val: val }; };
+
+            window.addDoc = async function(colRef, data) {
+                const colName = colRef.name;
+                const list = getLocalData(colName);
+                const newId = colName + "_" + Date.now() + "_" + Math.random().toString(36).substr(2, 5);
+                const enriched = Object.assign({ id: newId, timestamp: { seconds: Date.now() / 1000 } }, data);
+                list.push(enriched);
+                setLocalData(colName, list);
+                return { id: newId };
+            };
+
+            window.setDoc = async function(docRef, data) {
+                const colName = docRef.col;
+                const docId = docRef.id;
+                const list = getLocalData(colName);
+                const idx = list.findIndex(function(item) { return item.id === docId; });
+                if (idx !== -1) {
+                    list[idx] = Object.assign({ id: docId }, data);
+                } else {
+                    list.push(Object.assign({ id: docId }, data));
+                }
+                setLocalData(colName, list);
+            };
+
+            window.updateDoc = async function(docRef, data) {
+                const colName = docRef.col;
+                const docId = docRef.id;
+                const list = getLocalData(colName);
+                const idx = list.findIndex(function(item) { return item.id === docId; });
+                if (idx !== -1) {
+                    list[idx] = Object.assign({}, list[idx], data);
+                    setLocalData(colName, list);
+                }
+            };
+
+            window.deleteDoc = async function(docRef) {
+                const colName = docRef.col;
+                const docId = docRef.id;
+                const list = getLocalData(colName);
+                const filtered = list.filter(function(item) { return item.id !== docId; });
+                setLocalData(colName, filtered);
+            };
+
+            window.getDoc = async function(docRef) {
+                const colName = docRef.col;
+                const docId = docRef.id;
+                const list = getLocalData(colName);
+                const found = list.find(function(item) { return item.id === docId; });
+                return {
+                    exists: function() { return found !== undefined; },
+                    data: function() { return found; }
+                };
+            };
+
+            window.getDocs = async function(queryOrCol) {
+                const colName = queryOrCol.type === 'query' ? queryOrCol.col : queryOrCol.name;
+                let list = getLocalData(colName);
+
+                if (queryOrCol.type === 'query' && queryOrCol.constraints) {
+                    queryOrCol.constraints.forEach(function(con) {
+                        if (con && con.type === 'where') {
+                            list = list.filter(function(item) {
+                                const val = item[con.field];
+                                if (con.op === '==') return val === con.val;
+                                return true;
+                            });
+                        }
+                    });
+                }
+
+                return {
+                    empty: list.length === 0,
+                    forEach: function(cb) {
+                        list.forEach(function(item) {
+                            cb({
+                                id: item.id,
+                                data: function() { return item; }
+                            });
+                        });
+                    }
+                };
+            };
+
+            window.onSnapshot = function(ref, callback) {
+                const colName = ref.col || ref.name;
+                if (!listeners[colName]) {
+                    listeners[colName] = [];
+                }
+
+                const listenerWrapper = async function() {
+                    if (ref.id) {
+                        const list = getLocalData(colName);
+                        const found = list.find(function(item) { return item.id === ref.id; });
+                        callback({
+                            exists: function() { return found !== undefined; },
+                            data: function() { return found; }
+                        });
+                    } else {
+                        const snapshot = await window.getDocs(ref);
+                        callback(snapshot);
+                    }
+                };
+
+                listeners[colName].push(listenerWrapper);
+                listenerWrapper();
+
+                return function() {
+                    listeners[colName] = listeners[colName].filter(function(cb) { return cb !== listenerWrapper; });
+                };
+            };
+        }
+    })();
+    </script>
+    </body>
+</html>
